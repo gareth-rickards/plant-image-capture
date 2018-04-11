@@ -1,18 +1,19 @@
 from unrealcv import client
 
 
-def take_picture(weed, view_mode, degree, camera_position):
-    # Take a picture of the weed
-    print "Taking %s %s picture %d from %s" % (weed, view_mode, degree, camera_position)
+def take_picture(plant, view_mode, degree, camera_position):
+    # Take a picture of the plant
+    print "Taking %s %s picture %d from %s" % (plant, view_mode, degree, camera_position)
     image = client.request('vget /camera/0/%s png' % view_mode)
-    with open('D:\sudo_hackathon_pics\%s_%s_%s_%d.png' % (weed, view_mode, camera_position, degree), 'wb') as f:
+    with open('D:\sudo_hackathon_pics\%s_%s_%s_%d.png' % (plant, view_mode, camera_position, degree), 'wb') as f:
         f.write(image)
 
 
 def set_view_mode(view_mode):
     client.request('vset /viewmode %s' % view_mode)
     if view_mode == 'object_mask':
-        client.request('vset /object/Floor/color 139 69 19')
+        # Change floor colour
+        client.request('vset /object/Floor/color 136 109 92')
 
 
 def get_view_mode():
@@ -27,7 +28,7 @@ def set_camera_position(position='', rotation=''):
 
 
 def capture(view_mode, plant, camera_position):
-    # Remove all weeds except current_weed from map
+    # Remove all plants except the one we want to capture from map
     client.request('vset /object/%s/location 0 15 20' % plant)
     for degree in range(0, 360, 1):
         take_picture(plant, view_mode, degree, camera_position)
@@ -38,26 +39,33 @@ def capture(view_mode, plant, camera_position):
     client.request('vset /object/%s/location 40 0 200' % plant)
 
 
+def set_object_colour(object, colour):
+    client.request('vset /object/%s/color %s' % (object, colour))
+
+
 if __name__ == '__main__':
     client.connect()  # Connect to the game
     if not client.isconnected():  # Check if the connection is successfully established
-        print 'UnrealCV server is not running. Run the game from http://unrealcv.github.io first.'
+        print 'UnrealCV server is not running.'
 
-    weeds = []
+    plants = []
     oat_camera_coordinates = {'Position': '', 'Rotation': ''}
     dandelion_camera_coordinates = {'Position': '', 'Rotation': ''}
     objects = client.request('vget /objects').split(' ')
+
     for item in objects:
+        # Put the plant objects into the plants list.
         if item.startswith('dandelion') or item.startswith('oat'):
-            weeds.append(item)
-    print('Number of weeds in this scene:', len(weeds))
+            plants.append(item)
+    print('Number of weeds in this scene:', len(plants))
 
     # Rotate the camera to point to where the weeds will be
     oat_camera_coordinates['Position'] = '0 0 45'
     oat_camera_coordinates['Rotation'] = '-50 90 0'
     set_camera_position(oat_camera_coordinates['Position'], oat_camera_coordinates['Rotation'])
+
     # Move all plants out of the camera's view
-    for plant in weeds:
+    for plant in plants:
         print client.request('vset /object/%s/location 40 0 200' % plant)
 
     set_view_mode('lit')
@@ -71,6 +79,7 @@ if __name__ == '__main__':
     set_camera_position(oat_camera_coordinates['Position'])
     capture(get_view_mode(), 'oat', 'angle')
     set_camera_position(dandelion_camera_coordinates['Position'])
+    set_object_colour('dandelion', '0 250 0')
     capture(get_view_mode(), 'dandelion', 'angle')
 
     set_view_mode('lit')
@@ -91,4 +100,5 @@ if __name__ == '__main__':
 
     dandelion_camera_coordinates['Position'] = '0 15 40'
     set_camera_position(dandelion_camera_coordinates['Position'])
+    set_object_colour('dandelion', '0 250 0')
     capture(get_view_mode(), 'dandelion', 'top')
