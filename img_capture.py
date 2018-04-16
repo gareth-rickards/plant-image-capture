@@ -23,10 +23,8 @@ class Map(object):
             degree += 1
             print "Rotating plant..."
             plant.rotate('0 %d 0' % degree)
-            # client.request('vset /object/%s/rotation 0 %d 0' % (plant, degree))
         print "Moving weed out of view..."
         plant.move('40 0 200')
-        # client.request('vset /object/%s/location 40 0 200' % plant)
 
 
 class Camera(object):
@@ -53,8 +51,8 @@ class Plant(object):
     def __init__(self, name):
         self.name = name
 
-    def set_plant_colour(self, object, colour):
-        client.request('vset /object/%s/color %s' % (object, colour))
+    def set_plant_colour(self, colour):
+        client.request('vset /object/%s/color %s' % (self.name, colour))
 
     def move(self, location):
         client.request('vset /object/%s/location %s' % (self.name, location))
@@ -104,37 +102,21 @@ if __name__ == '__main__':
     game_map.set_view_mode('object_mask')
 
     for plant in plants:
+        if plant.name == 'dandelion':
+            plant.set_plant_colour('0 250 0')
+        camera.move(
+            oat_camera_coordinates['Position'] if plant.name == 'oat' else dandelion_camera_coordinates['Position'])
         game_map.capture(game_map.get_view_mode(), camera, plant, 'angle')
 
+    game_map.set_view_mode('lit')
+    camera.rotate('-100 0 0')
 
-    # dandelion_camera_coordinates['Position'] = '0 3 35'
-    # set_camera_position(dandelion_camera_coordinates['Position'])
-    # capture(get_view_mode(), 'dandelion', 'angle')
-    #
-    # set_view_mode('object_mask')
-    # set_camera_position(oat_camera_coordinates['Position'])
-    # capture(get_view_mode(), 'oat', 'angle')
-    # set_camera_position(dandelion_camera_coordinates['Position'])
-    # set_object_colour('dandelion', '0 250 0')
-    # capture(get_view_mode(), 'dandelion', 'angle')
-    #
-    # set_view_mode('lit')
-    # oat_camera_coordinates['Position'] = '0 15 50'
-    # oat_camera_coordinates['Rotation'] = '-100 0 0'
-    # set_camera_position(oat_camera_coordinates['Position'], oat_camera_coordinates['Rotation'])
-    # capture(get_view_mode(), 'oat', 'top')
-    #
-    # dandelion_camera_coordinates['Position'] = '0 15 40'
-    # set_camera_position(dandelion_camera_coordinates['Position'])
-    # capture(get_view_mode(), 'dandelion', 'top')
-    #
-    # set_view_mode('object_mask')
-    # oat_camera_coordinates['Position'] = '0 15 50'
-    # oat_camera_coordinates['Rotation'] = '-100 0 0'
-    # set_camera_position(oat_camera_coordinates['Position'], oat_camera_coordinates['Rotation'])
-    # capture(get_view_mode(), 'oat', 'top')
-    #
-    # dandelion_camera_coordinates['Position'] = '0 15 40'
-    # set_camera_position(dandelion_camera_coordinates['Position'])
-    # set_object_colour('dandelion', '0 250 0')
-    # capture(get_view_mode(), 'dandelion', 'top')
+    for plant in plants:
+        camera.move('0 15 50' if plant.name == 'oat' else '0 15 40')
+        game_map.capture(game_map.get_view_mode(), camera, plant, 'top')
+
+    game_map.set_view_mode('object_mask')
+
+    for plant in plants:
+        camera.move('0 15 50' if plant.name == 'oat' else '0 15 40')
+        game_map.capture(game_map.get_view_mode(), camera, plant, 'top')
